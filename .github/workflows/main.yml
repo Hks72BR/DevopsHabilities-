@@ -20,7 +20,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t your-dockerhub-username/your-repo:latest .
+          docker build -t hks72br/DevopsHabilities-:latest .
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -30,4 +30,4 @@ jobs:
 
       - name: Push Docker image
         run: |
-          docker push your-dockerhub-username/your-repo:latest
+          docker push hks72br/DevopsHabilities-:latest
