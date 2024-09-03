@@ -1,21 +1,19 @@
-# Arquivo: k8s/deployment.yaml
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: node-app-deployment
+  name: nome-da-aplicacao
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
-      app: node-app
+      app: nome-da-aplicacao
   template:
     metadata:
       labels:
-        app: node-app
+        app: nome-da-aplicacao
     spec:
       containers:
-      - name: node-app
-        image: my-app:latest
-        ports:
-        - containerPort: 3000
+        - name: nome-da-aplicacao
+          image: <account-id>.dkr.ecr.<sua-regiao>.amazonaws.com/nome-do-repositorio:latest
+          ports:
+            - containerPort: 3000
