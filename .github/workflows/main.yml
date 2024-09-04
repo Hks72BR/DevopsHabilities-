@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy to AWS
 
 on:
   push:
@@ -28,30 +28,27 @@ jobs:
       run: |
         docker build -t my-app .
 
-    - name: Push Docker image to ECR
-      env:
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        ECR_REGISTRY: 123456789012.dkr.ecr.us-west-2.amazonaws.com
-        IMAGE_NAME: my-app
+    - name: Save Docker image as tar file
       run: |
-        $(aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY)
-        docker tag my-app:latest $ECR_REGISTRY/$IMAGE_NAME:latest
-        docker push $ECR_REGISTRY/$IMAGE_NAME:latest
+        docker save my-app:latest -o my-app.tar
 
-    - name: Deploy to EC2
-      env:
-        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        EC2_HOST: your-ec2-ip-address
+    - name: Upload Docker image to S3
       run: |
-        echo "$SSH_KEY" > private_key.pem
-        chmod 600 private_key.pem
+        aws s3 cp my-app.tar s3://dockerfiledeploy/dockerfile.tar
 
-        ssh -o StrictHostKeyChecking=no -i private_key.pem ec2-user@$EC2_HOST << 'EOF'
-          sudo docker pull $ECR_REGISTRY/$IMAGE_NAME:latest
-          sudo docker stop my-app || true
-          sudo docker rm my-app || true
-          sudo docker run -d --name my-app -p 80:80 $ECR_REGISTRY/$IMAGE_NAME:latest
-        EOF
-
-        rm private_key.pem
-        
+    - name: Deploy to EC2 using SSM
+      env:
+        INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+        S3_BUCKET: your-bucket-name
+        S3_IMAGE_PATH: my-app.tar
+      run: |
+        aws ssm send-command \
+          --document-name "AWS-RunShellScript" \
+          --targets "Key=instanceids,Values=$INSTANCE_ID" \
+          --parameters 'commands=[
+            "aws s3 cp s3://$S3_BUCKET/$S3_IMAGE_PATH /tmp/my-app.tar",
+            "sudo docker load -i /tmp/my-app.tar",
+            "sudo docker stop my-app || true",
+            "sudo docker rm my-app || true",
+            "sudo docker run -d --name my-app -p 80:80 my-app:latest"
+          ]'
