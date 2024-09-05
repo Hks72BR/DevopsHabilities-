@@ -37,7 +37,7 @@ jobs:
     steps:
       - name: Download Dockerfile from S3
         run: |
-          aws s3 cp s3://dockerfiledeploy/dockerfile ./Dockerfile
+          aws s3 cp s3://dockerfiledeploy/dockerfile ./Dockerfile --debug
 
   build_docker_image:
     runs-on: ubuntu-latest
