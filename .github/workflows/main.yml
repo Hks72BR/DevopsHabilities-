@@ -36,7 +36,7 @@ jobs:
     needs: install_aws_cli
     steps:
       - name: Test AWS CLI
-        run: aws s3 ls
+        run: aws s3 ls --debug
         
       - name: Download Dockerfile from S3
         run: |
@@ -56,7 +56,7 @@ jobs:
 
       - name: Upload Docker image to S3
         run: |
-          aws s3 cp my-app.tar s3://dockerfiledeploy/dockerfile.tar
+          aws s3 cp s3://dockerfiledeploy/dockerfile.tar
 
   deploy_to_ec2:
     runs-on: ubuntu-latest
@@ -65,8 +65,8 @@ jobs:
       - name: Deploy to EC2 using SSM
         env:
           INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
-          S3_BUCKET: your-bucket-name
-          S3_IMAGE_PATH: my-app.tar
+          S3_BUCKET: dockerfiledeploy
+          S3_IMAGE_PATH: s3://dockerfiledeploy/dockerfile.tar
         run: |
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
