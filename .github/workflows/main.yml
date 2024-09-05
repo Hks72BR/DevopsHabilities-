@@ -6,57 +6,72 @@ on:
       - main
 
 jobs:
-  deploy:
+  checkout_code:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-    
-    - name: Install AWS CLI
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y awscli
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Verify AWS CLI version
-      run: aws --version
+  install_aws_cli:
+    runs-on: ubuntu-latest
+    needs: checkout_code
+    steps:
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
 
-    - name: Set up AWS CLI
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+      - name: Verify AWS CLI version
+        run: aws --version
 
-    - name: Download Dockerfile from S3
-      run: |
-        aws s3 cp s3://dockerfiledeploy/dockerfile ./Dockerfile
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Build Docker image
-      run: |
-        docker build -t my-app .
+  download_dockerfile:
+    runs-on: ubuntu-latest
+    needs: install_aws_cli
+    steps:
+      - name: Download Dockerfile from S3
+        run: |
+          aws s3 cp s3://dockerfiledeploy/dockerfile ./Dockerfile
 
-    - name: Save Docker image as tar file
-      run: |
-        docker save my-app:latest -o my-app.tar
+  build_docker_image:
+    runs-on: ubuntu-latest
+    needs: download_dockerfile
+    steps:
+      - name: Build Docker image
+        run: |
+          docker build -t my-app .
 
-    - name: Upload Docker image to S3
-      run: |
-        aws s3 cp my-app.tar s3://dockerfiledeploy/dockerfile.tar
+      - name: Save Docker image as tar file
+        run: |
+          docker save my-app:latest -o my-app.tar
 
-    - name: Deploy to EC2 using SSM
-      env:
-        INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
-        S3_BUCKET: your-bucket-name
-        S3_IMAGE_PATH: my-app.tar
-      run: |
-        aws ssm send-command \
-          --document-name "AWS-RunShellScript" \
-          --targets "Key=instanceids,Values=$INSTANCE_ID" \
-          --parameters 'commands=[
-            "aws s3 cp s3://$S3_BUCKET/$S3_IMAGE_PATH /tmp/my-app.tar",
-            "sudo docker load -i /tmp/my-app.tar",
-            "sudo docker stop my-app || true",
-            "sudo docker rm my-app || true",
-            "sudo docker run -d --name my-app -p 80:80 my-app:latest"
-          ]'
+      - name: Upload Docker image to S3
+        run: |
+          aws s3 cp my-app.tar s3://dockerfiledeploy/dockerfile.tar
+
+  deploy_to_ec2:
+    runs-on: ubuntu-latest
+    needs: build_docker_image
+    steps:
+      - name: Deploy to EC2 using SSM
+        env:
+          INSTANCE_ID: ${{ secrets.EC2_INSTANCE_ID }}
+          S3_BUCKET: your-bucket-name
+          S3_IMAGE_PATH: my-app.tar
+        run: |
+          aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=instanceIds,Values=$INSTANCE_ID" \
+            --parameters 'commands=[
+              "aws s3 cp s3://$S3_BUCKET/$S3_IMAGE_PATH /tmp/my-app.tar",
+              "sudo docker load -i /tmp/my-app.tar",
+              "sudo docker stop my-app || true",
+              "sudo docker rm my-app || true",
+              "sudo docker run -d --name my-app -p 80:80 my-app:latest"
+            ]'
