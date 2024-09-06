@@ -1,13 +1,13 @@
 # Projeto DevOps com Express, Docker, Terraform e GitHub Actions
 
-Este projeto demonstra a configuração e o deploy de uma aplicação web simples usando Node.js com Express, Docker, AWS, Terraform e GitHub Actions.
+Este projeto demonstra a configuração e o deploy de uma aplicação web simples usando Node.js com Express, Docker, AWS, Terraform e GitHub Actions em um cluster EKS (Elastic Kubernetes Service) na AWS.
 
 ## Sumário
 
 - [Visão Geral](#visão-geral)
 - [Instalação e Configuração](#instalação-e-configuração)
 - [Estrutura do Projeto](#estrutura-do-projeto)
-- [Deploy com GitHub Actions](#deploy-com-github-actions)
+- [Deploy com GitHub Actions no EKS](#deploy-com-github-actions-no-eks)
 - [Contribuição](#contribuição)
 - [Licença](#licença)
 
@@ -18,7 +18,7 @@ Este projeto inclui:
 - Uma aplicação web simples criada com Node.js e Express.
 - Um Dockerfile para criar uma imagem Docker da aplicação.
 - Infraestrutura provisionada com Terraform, incluindo uma VPC, sub-redes e um cluster EKS.
-- Um pipeline de CI/CD usando GitHub Actions para construir e implantar a imagem Docker em uma instância EC2.
+- Um pipeline de CI/CD usando GitHub Actions para construir e implantar a imagem Docker no cluster EKS da AWS.
 
 ## Instalação e Configuração
 
@@ -27,6 +27,8 @@ Este projeto inclui:
 - [Node.js](https://nodejs.org/) (versão 14 ou superior)
 - [Docker](https://www.docker.com/get-started)
 - [Terraform](https://www.terraform.io/downloads.html)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- [AWS CLI](https://aws.amazon.com/cli/)
 - [GitHub Actions](https://github.com/features/actions)
 - Conta AWS com permissões apropriadas
 
@@ -72,31 +74,19 @@ Este projeto inclui:
 - **app.js:** Código da aplicação Express.
 - **Dockerfile:** Define a imagem Docker da aplicação.
 - **terraform/**: Configurações do Terraform para provisionamento da infraestrutura AWS.
-- **.github/workflows/deploy.yml:** Configuração do pipeline de CI/CD com GitHub Actions.
+- **.github/workflows/deploy.yml:** Configuração do pipeline de CI/CD com GitHub Actions para deploy no EKS.
 
-## Deploy com GitHub Actions
+## Deploy com GitHub Actions no EKS
 
 O pipeline de CI/CD está configurado para realizar os seguintes passos:
 
 1. **Checkout do código.**
 2. **Construção da imagem Docker.**
-3. **Salvar a imagem como um arquivo tar.**
-4. **Configuração das credenciais AWS.**
-5. **Upload da imagem Docker para o S3.**
-6. **Deploy da imagem Docker em uma instância EC2 usando SSM.**
+3. **Configuração das credenciais AWS.**
+4. **Login no Amazon ECR, tag e push da imagem Docker para o repositório ECR.**
+5. **Atualização do kubeconfig para se conectar ao cluster EKS.**
+6. **Deploy da imagem Docker no cluster EKS.**
 
-### Detalhes do Pipeline
 
-- O pipeline é acionado ao realizar um push na branch `main`.
-- A imagem Docker da aplicação é construída localmente e salva como um arquivo `.tar`.
-- A imagem é carregada para um bucket S3 e, em seguida, implantada em uma instância EC2 via AWS SSM (System Manager), que baixa a imagem do S3, carrega-a no Docker e executa o contêiner.
-
-Certifique-se de que as variáveis de ambiente e segredos necessários estão configurados no GitHub, como `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` e `EC2_INSTANCE_ID`.
-
-## Contribuição
-
-Contribuições são bem-vindas! Por favor, siga o fluxo padrão de pull request para sugerir alterações.
-
-## Licença
-
-Este projeto está licenciado sob a [MIT License](LICENSE).
+##Nota: 
+O deploy no EKS não foi concluído devido às limitações da conta AWS Free Tier, que não suporta os recursos necessários para um ambiente de produção completo.
