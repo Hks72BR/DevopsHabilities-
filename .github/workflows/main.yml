@@ -29,7 +29,8 @@ jobs:
     steps:
       - name: Build Docker image
         run: |
-          docker build -t my-app .  # Assumindo que o Dockerfile está na raiz do repositório
+        
+          docker build -t my-app -f docker/Dockerfile .
 
       - name: Save Docker image as tar file
         run: |
