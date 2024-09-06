@@ -79,13 +79,19 @@ Este projeto inclui:
 O pipeline de CI/CD está configurado para realizar os seguintes passos:
 
 1. **Checkout do código.**
-2. **Configuração das credenciais AWS.**
-3. **Download do Dockerfile a partir do S3.**
-4. **Construção da imagem Docker.**
+2. **Construção da imagem Docker.**
+3. **Salvar a imagem como um arquivo tar.**
+4. **Configuração das credenciais AWS.**
 5. **Upload da imagem Docker para o S3.**
 6. **Deploy da imagem Docker em uma instância EC2 usando SSM.**
 
-Certifique-se de que as variáveis de ambiente e segredos necessários estão configurados no GitHub.
+### Detalhes do Pipeline
+
+- O pipeline é acionado ao realizar um push na branch `main`.
+- A imagem Docker da aplicação é construída localmente e salva como um arquivo `.tar`.
+- A imagem é carregada para um bucket S3 e, em seguida, implantada em uma instância EC2 via AWS SSM (System Manager), que baixa a imagem do S3, carrega-a no Docker e executa o contêiner.
+
+Certifique-se de que as variáveis de ambiente e segredos necessários estão configurados no GitHub, como `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` e `EC2_INSTANCE_ID`.
 
 ## Contribuição
 
