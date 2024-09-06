@@ -26,7 +26,7 @@ jobs:
             --image-id ami-0c55b159cbfafe1f0 \
             --count 1 \
             --instance-type t2.micro \
-            --key-name ${{ secrets.KEY_NAME }} \
+            --key-name ${{ secrets.EC2_KEY_NAME }} \
             --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MyEC2Instance}]' \
             --query 'Instances[0].InstanceId' \
             --output text)
@@ -48,7 +48,6 @@ jobs:
 
       - name: Verify Docker installation
         run: |
-          # Verifying if Docker is installed
           aws ssm send-command \
             --document-name "AWS-RunShellScript" \
             --targets "Key=instanceids,Values=${{ env.INSTANCE_ID }}" \
