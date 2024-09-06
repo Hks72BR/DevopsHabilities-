@@ -88,5 +88,5 @@ O pipeline de CI/CD está configurado para realizar os seguintes passos:
 6. **Deploy da imagem Docker no cluster EKS.**
 
 
-##Nota: 
+##Nota 
 O deploy no EKS não foi concluído devido às limitações da conta AWS Free Tier, que não suporta os recursos necessários para um ambiente de produção completo.
