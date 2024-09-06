@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Build Docker image
         run: |
-        
+          ls -R        
           docker build -t my-app -f docker/Dockerfile .
 
       - name: Save Docker image as tar file
